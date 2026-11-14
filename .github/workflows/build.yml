@@ -1,5 +1,5 @@
 
-name: Build CleanGuard APK
+name: Build AplayFire v1.5 APK
 
 on:
   push:
@@ -7,62 +7,48 @@ on:
       - main
   workflow_dispatch:
 
-permissions:
-  contents: read
-
 jobs:
   build:
-    name: Build Android APK
     runs-on: ubuntu-latest
 
-    env:
-      PROJECT_DIR: APLAYFIRE_v1.3/CleanGuard
+    defaults:
+      run:
+        working-directory: "APLAYFIRE_v1.5 (1)/CleanGuard"
 
     steps:
-      - name: Checkout Repository
+      - name: Baixar código
         uses: actions/checkout@v4
 
-      - name: Setup Java 17
-        uses: actions/setup-java@v5
+      - name: Configurar Java 17
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: '17'
+          cache: gradle
 
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: 8.5
-
-      - name: Verify Project Structure
+      - name: Verificar estrutura do projeto
         run: |
-          echo "Checking Android project..."
+          echo "Verificando CleanGuard v1.5..."
           pwd
-          ls -la "$PROJECT_DIR"
-          test -f "$PROJECT_DIR/settings.gradle" || test -f "$PROJECT_DIR/settings.gradle.kts"
-          test -d "$PROJECT_DIR/app"
+          ls -la
+          test -f settings.gradle.kts
+          test -d app
 
-      - name: Build Debug APK
-        working-directory: APLAYFIRE_v1.3/CleanGuard
+      - name: Configurar permissões do Gradle
+        run: chmod +x gradlew
+
+      - name: Compilar APK Debug
+        run: ./gradlew assembleDebug --stacktrace
+
+      - name: Localizar APK
         run: |
-          if [ -f gradlew ]; then
-            chmod +x gradlew
-            ./gradlew assembleDebug --stacktrace
-          else
-            gradle assembleDebug --stacktrace
-          fi
+          echo "APKs gerados:"
+          find app/build/outputs/apk -name "*.apk"
 
-      - name: Upload Debug APK
-        if: success()
+      - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
         with:
-          name: CleanGuard-APK
-          path: APLAYFIRE_v1.3/CleanGuard/app/build/outputs/apk/debug/*.apk
+          name: AplayFire-v1.5-APK
+          path: APLAYFIRE_v1.5 (1)/CleanGuard/app/build/outputs/apk/debug/*.apk
           if-no-files-found: error
-          retention-days: 7
-
-      - name: Show Kotlin Compilation Errors
-        if: failure()
-        working-directory: APLAYFIRE_v1.3/CleanGuard
-        run: |
-          echo "Build failed. Showing Kotlin diagnostics..."
-          gradle compileDebugKotlin --stacktrace --info
+          retention-days: 14
