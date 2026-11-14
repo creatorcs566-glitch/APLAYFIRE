@@ -1,1 +1,0 @@
-# Um dominio malicioso por linha (ex.: site-golpe.com). Linhas com # sao ignoradas.
