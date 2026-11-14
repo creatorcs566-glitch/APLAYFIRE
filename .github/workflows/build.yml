@@ -11,12 +11,8 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: "APLAYFIRE_v1.5 (1)/CleanGuard"
-
     steps:
-      - name: Baixar código
+      - name: Baixar projeto
         uses: actions/checkout@v4
 
       - name: Configurar Java 17
@@ -24,31 +20,54 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-          cache: gradle
 
-      - name: Verificar estrutura do projeto
+      - name: Instalar Gradle 8.5
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.5'
+
+      - name: Verificar projeto
+        working-directory: "APLAYFIRE_v1.5 (1)/CleanGuard"
         run: |
-          echo "Verificando CleanGuard v1.5..."
-          pwd
+          echo "Verificando CleanGuard 1.5..."
           ls -la
           test -f settings.gradle.kts
           test -d app
 
-      - name: Configurar permissões do Gradle
-        run: chmod +x gradlew
-
-      - name: Compilar APK Debug
-        run: ./gradlew assembleDebug --stacktrace
-
-      - name: Localizar APK
+      - name: Gerar Gradle Wrapper
+        working-directory: "APLAYFIRE_v1.5 (1)/CleanGuard"
         run: |
-          echo "APKs gerados:"
-          find app/build/outputs/apk -name "*.apk"
+          gradle wrapper --gradle-version 8.5 --distribution-type bin
 
-      - name: Disponibilizar APK
+      - name: Verificar Wrapper
+        working-directory: "APLAYFIRE_v1.5 (1)/CleanGuard"
+        run: |
+          ls -la
+          ls -la gradle/wrapper
+          test -f gradlew
+          test -f gradle/wrapper/gradle-wrapper.jar
+
+      - name: Compilar APK
+        working-directory: "APLAYFIRE_v1.5 (1)/CleanGuard"
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
+
+      - name: Enviar APK
         uses: actions/upload-artifact@v4
         with:
           name: AplayFire-v1.5-APK
-          path: APLAYFIRE_v1.5 (1)/CleanGuard/app/build/outputs/apk/debug/*.apk
+          path: "APLAYFIRE_v1.5 (1)/CleanGuard/app/build/outputs/apk/debug/*.apk"
+          if-no-files-found: error
+          retention-days: 14
+
+      - name: Salvar Gradle Wrapper
+        uses: actions/upload-artifact@v4
+        with:
+          name: Gradle-Wrapper-v1.5
+          path: |
+            APLAYFIRE_v1.5 (1)/CleanGuard/gradlew
+            APLAYFIRE_v1.5 (1)/CleanGuard/gradlew.bat
+            APLAYFIRE_v1.5 (1)/CleanGuard/gradle/wrapper/
           if-no-files-found: error
           retention-days: 14
